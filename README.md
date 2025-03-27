@@ -1,184 +1,467 @@
-# Dokumentasi API - Microservices Autentikasi
+Berikut adalah dokumentasi API dalam format Markdown:
 
-## Pendahuluan
-Dokumentasi ini menjelaskan endpoint yang tersedia dalam layanan autentikasi microservices. API ini digunakan untuk proses registrasi, login, logout, dan mendapatkan profil pengguna.
-
-## Basis URL
-```
-http://your-api-domain.com/api
-```
 
 ---
 
-## 1. Registrasi Pengguna
-### Endpoint
-```
-POST /register
-```
-### Deskripsi
-Endpoint ini digunakan untuk mendaftarkan pengguna baru berdasarkan perannya (nasabah, bsu, perusahaan, pemerintah).
+### 1. Cek Profil BSU
+**Method:** `GET`  
+**Endpoint:** `/profile`  
+**Headers:** `Authorization: Bearer {token}`  
+**Query Parameter:**
+- `bsu_id` (UUID) - Required
 
-### Parameter Request
-| Nama            | Tipe   | Wajib | Deskripsi |
-|---------------|--------|------|------------|
-| email         | string | Ya   | Email pengguna unik |
-| password      | string | Ya   | Minimal 8 karakter |
-| role          | string | Ya   | Peran pengguna (`nasabah`, `bsu`, `perusahaan`, `pemerintah`) |
-| nomor_registrasi (bsu) | string | Ya* | Nomor registrasi unik untuk BSU |
-| nama_bsu (bsu) | string | Ya* | Nama Bank Sampah Unit |
-| nama_perusahaan (perusahaan) | string | Ya* | Nama perusahaan |
-| jenis_perusahaan (perusahaan) | string | Ya* | Jenis perusahaan |
-| kode_instansi (pemerintah) | string | Ya* | Kode unik instansi pemerintah |
-| nama_instansi (pemerintah) | string | Ya* | Nama instansi pemerintah |
-
-(*) Wajib sesuai dengan peran yang dipilih.
-
-### Contoh Request
+**Response:**
 ```json
 {
-    "email": "user@example.com",
-    "password": "password123",
-    "role": "bsu",
-    "nomor_registrasi": "BSU-001",
-    "nama_bsu": "Bank Sampah Sejahtera"
-}
-```
-
-### Contoh Respons Berhasil
-```json
-{
-    "status": true,
-    "message": "Registrasi berhasil",
-    "data": {
-        "user": { "id": 1, "email": "user@example.com", "role": "bsu" },
-        "token": "eyJhbGciOiJIUzI1NiIsIn...",
-        "token_type": "bearer",
-        "expires_in": 3600
+  "status": true,
+  "data": {
+    "bsu": {
+      "id": "bsu-123",
+      "nama_bsu": "Bank Sampah Sejahtera",
+      "alamat": "Jl. Merdeka No. 10"
     }
+  }
 }
 ```
 
-### Contoh Respons Gagal
+```
+# API Documentation for BSU (Bank Sampah Unit)
+
+**Authorization:** Bearer Token required for all endpoints.
+
+---
+
+## Endpoints
+
+### 2. Edit Profil BSU
+**Method:** `PUT`  
+**Endpoint:** `/edit/profile`  
+**Headers:**
+- `Authorization: Bearer {token}`
+- `Content-Type: multipart/form-data`
+
+**Request Body (Form-Data):**
+| Field             | Type     | Description                                      |
+|-------------------|----------|--------------------------------------------------|
+| `bsu_id`          | UUID     | ID BSU (Required)                                |
+| `email`           | String   | (Optional) Email baru                            |
+| `password`        | String   | (Optional) Password baru                         |
+| `gambar_bsu`      | File     | (Optional) Gambar profil (max 2MB, JPG/PNG)      |
+| `nama_bsu`        | String   | (Optional) Nama BSU                              |
+| `kategori`        | String   | (Optional) Kategori BSU                          |
+| `alamat`          | String   | (Optional) Alamat lengkap                        |
+| `jalan_dusun`     | String   | (Optional) Nama jalan/dusun                      |
+| `rt`              | String   | (Optional) Nomor RT                              |
+| `rw`              | String   | (Optional) Nomor RW                              |
+| `desa`            | String   | (Optional) Desa                                  |
+| `kecamatan`       | String   | (Optional) Kecamatan                             |
+| `longitude`       | Float    | (Optional) Koordinat longitude                   |
+| `latitude`        | Float    | (Optional) Koordinat latitude                    |
+| `tanggal_berdiri` | Date     | (Optional) Tanggal berdiri BSU                   |
+| `nama_pengurus`   | String   | (Optional) Nama pengurus                         |
+| `jumlah_nasabah`  | Integer  | (Optional) Jumlah nasabah                        |
+| `nomor_telepon`   | String   | (Optional) Nomor telepon                         |
+| `reward_level`    | String   | (Optional) Level reward BSU                      |
+| `total_sampah`    | Float    | (Optional) Total sampah terkelola                |
+
+**Response (Success):**
 ```json
 {
-    "status": false,
-    "message": "Validasi gagal",
-    "errors": {
-        "email": ["Email sudah digunakan"]
+  "status": true,
+  "message": "profil berhasil di edit",
+  "data": {
+    "user_bsu": {
+      "id": "bsu-123",
+      "nama_bsu": "Bank Sampah Sejahtera",
+      "email": "bsu@example.com",
+      "gambar_bsu": "1678901234_bsu123.jpg"
     }
+  }
+}
+```
+
+**Response (Error):**
+```json
+{
+  "status": false,
+  "message": "Gagal untuk mengupdate profil",
+  "error": "Error details"
 }
 ```
 
 ---
 
-## 2. Login Pengguna
-### Endpoint
-```
-POST /login
-```
-### Deskripsi
-Endpoint ini digunakan untuk proses login pengguna.
+### 3. Tambah Sampah BSU
+**Method:** `POST`  
+**Endpoint:** `/tambah-sampah`  
+**Headers:**
+- `Authorization: Bearer {token}`
+- `Content-Type: application/json`
 
-### Parameter Request
-| Nama      | Tipe   | Wajib | Deskripsi |
-|----------|--------|------|------------|
-| email    | string | Ya   | Email pengguna |
-| password | string | Ya   | Kata sandi pengguna |
-
-### Contoh Request
+**Request Body:**
 ```json
 {
-    "email": "user@example.com",
-    "password": "password123"
+  "tipe": "plastik",
+  "nama": "Botol PET",
+  "harga_satuan": 5000
 }
 ```
 
-### Contoh Respons Berhasil
+**Response:**
 ```json
 {
-    "status": true,
-    "message": "Login berhasil",
-    "data": {
-        "user": { "id": 1, "email": "user@example.com", "role": "bsu" },
-        "profile": { "nama_bsu": "Bank Sampah Sejahtera" },
-        "token": "eyJhbGciOiJIUzI1NiIsIn...",
-        "token_type": "bearer",
-        "expires_in": 3600
+  "status": true,
+  "message": "sampah berhasil ditambahkan"
+}
+```
+
+---
+
+### 4. Transaksi Sampah Nasabah
+**Method:** `POST`  
+**Endpoint:** `/transaksi-sampah`  
+**Headers:**
+- `Authorization: Bearer {token}`
+- `Content-Type: application/json`
+
+**Request Body:**
+```json
+{
+  "nik_nasabah": "3273012345678901",
+  "sampah": [
+    {
+      "id": "sampah-123",
+      "berat": 2.5
     }
+  ]
 }
 ```
 
-### Contoh Respons Gagal
+**Response (Success):**
 ```json
 {
-    "status": false,
-    "message": "Email atau password salah"
-}
-```
-
----
-
-## 3. Logout Pengguna
-### Endpoint
-```
-POST /logout
-```
-### Deskripsi
-Endpoint ini digunakan untuk logout pengguna dan menghapus token autentikasi.
-
-### Header Authorization
-| Nama            | Tipe   | Wajib | Deskripsi |
-|---------------|--------|------|------------|
-| Authorization | string | Ya   | Token Bearer pengguna |
-
-### Contoh Request
-```
-Header:
-Authorization: Bearer {token}
-```
-
-### Contoh Respons Berhasil
-```json
-{
-    "status": true,
-    "message": "Logout berhasil"
+  "message": "Transaksi berhasil disimpan",
+  "transaksi_id": "transaksi-456"
 }
 ```
 
 ---
 
-## 4. Mendapatkan Profil Pengguna
-### Endpoint
-```
-GET /profile
-```
-### Deskripsi
-Endpoint ini digunakan untuk mendapatkan informasi akun pengguna yang sedang login.
+### 5. Cek Semua Transaksi
+**Method:** `GET`  
+**Endpoint:** `/cek-semua-transaksi-bsu`  
+**Headers:** `Authorization: Bearer {token}`  
+**Query Parameter:**
+- `user_id` (UUID) - Required
 
-### Header Authorization
-| Nama            | Tipe   | Wajib | Deskripsi |
-|---------------|--------|------|------------|
-| Authorization | string | Ya   | Token Bearer pengguna |
-
-### Contoh Request
-```
-Header:
-Authorization: Bearer {token}
-```
-
-### Contoh Respons Berhasil
+**Response:**
 ```json
 {
-    "status": true,
-    "data": {
-        "user": { "id": 1, "email": "user@example.com", "role": "bsu" },
-        "profile": { "nama_bsu": "Bank Sampah Sejahtera" }
+  "status": true,
+  "data": [
+    {
+      "id": "transaksi-456",
+      "total_harga": 12500,
+      "detailTransaksi": [
+        {
+          "berat": 2.5,
+          "sampah": {
+            "nama": "Botol PET",
+            "harga_satuan": 5000
+          }
+        }
+      ]
     }
+  ]
 }
 ```
 
 ---
 
-## Kesimpulan
-Dokumentasi ini mencakup API autentikasi dengan fitur registrasi, login, logout, dan profil pengguna. Pastikan setiap permintaan yang membutuhkan autentikasi menggunakan token Bearer yang valid.
+### 6. Rekapitulasi Sampah
+**Method:** `GET`  
+**Endpoint:** `/cek-rekapitulasi-bsu`  
+**Headers:** `Authorization: Bearer {token}`  
+**Query Parameters:**
+- `start_date` (Date) - Optional (default: awal minggu ini)
+- `end_date` (Date) - Optional (default: akhir minggu ini)
 
+**Response:**
+```json
+{
+  "rekapitulasi": [
+    {
+      "tipe": "plastik",
+      "total_berat": 150
+    }
+  ],
+  "chart_data": {
+    "labels": ["Plastik"],
+    "datasets": {
+      "data": [150],
+      "backgroundColor": ["#1F77B4"]
+    }
+  }
+}
+```
+
+---
+
+### 7. Kelola Penarikan Nasabah
+
+#### 7.1 Cek Ajuan Penarikan
+**Method:** `GET`  
+**Endpoint:** `/cek-ajuan-bsu`  
+**Headers:** `Authorization: Bearer {token}`  
+**Query Parameter:**
+- `user_id` (UUID) - Required
+
+**Response:**
+```json
+{
+  "status": true,
+  "data": [
+    {
+      "id": "ajuan-789",
+      "nik": "3273012345678901",
+      "total_penarikan": 50000,
+      "status": "pending"
+    }
+  ]
+}
+```
+
+#### 7.2 Proses Ajuan Penarikan
+**Method:** `POST`  
+**Endpoint:** `/proses-ajuan-penarikan/{pengajuan_id}`  
+**Headers:**
+- `Authorization: Bearer {token}`
+- `Content-Type: application/json`
+
+**Request Body:**
+```json
+{
+  "status": "berhasil",
+  "keterangan": "Penarikan berhasil diproses"
+}
+```
+
+**Response:**
+```json
+{
+  "status": true,
+  "message": "pengajuan berhasil"
+}
+```
+
+---
+
+## Error Handling
+Semua error akan mengembalikan response dengan format:
+```json
+{
+  "status": false,
+  "message": "Deskripsi error",
+  "error": "Detail teknis error"
+}
+```
+
+Dengan kode status HTTP:
+- `400` Bad Request
+- `401` Unauthorized
+- `404` Not Found
+- `500` Internal Server Error
+```
+
+Berikut dokumentasi API untuk Nasabah dalam format Markdown:
+
+```markdown
+# API Documentation for Nasabah
+
+**Authorization:** Bearer Token required for all endpoints.
+
+---
+
+## Endpoints
+
+### 1. Edit Profil Nasabah
+**Method:** `PUT`  
+**Endpoint:** `/edit-profil`  
+**Headers:**
+- `Authorization: Bearer {token}`
+- `Content-Type: application/json`
+
+**Request Body (JSON):**
+```json
+{
+  "nik": "3273012345678901",
+  "nama": "John Doe",
+  "alamat": "Jl. Sudirman No. 1",
+  "nomor_wa": "081234567890",
+  "nomor_rekening": "1234567890",
+  "nama_pemilik_rekening": "John Doe",
+  "jenis_rekening": "BCA"
+}
+```
+*Note: Semua field bersifat optional*
+
+**Response (Success):**
+```json
+{
+  "status": true,
+  "message": "Profil nasabah berhasil diperbarui",
+  "data": {
+    "id": "nasabah-123",
+    "nik": "3273012345678901",
+    "nama": "John Doe",
+    "saldo": 150000
+  }
+}
+```
+
+**Response (Error):**
+```json
+{
+  "status": false,
+  "message": "Nasabah tidak ditemukan"
+}
+```
+
+---
+
+### 2. Cek Profil Nasabah
+**Method:** `GET`  
+**Endpoint:** `/cek-profil`  
+**Headers:** `Authorization: Bearer {token}`
+
+**Response:**
+```json
+{
+  "status": true,
+  "data": {
+    "user_nasabah": {
+      "id": "nasabah-123",
+      "nik": "3273012345678901",
+      "nama": "John Doe",
+      "saldo": 150000
+    },
+    "user": {
+      "email": "john@example.com",
+      "role": "nasabah"
+    }
+  }
+}
+```
+
+---
+
+### 3. Cek Transaksi Nasabah
+**Method:** `GET`  
+**Endpoint:** `/cek-transaksi`  
+**Headers:** `Authorization: Bearer {token}`
+
+**Response:**
+```json
+{
+  "status": true,
+  "data": [
+    {
+      "id": "transaksi-456",
+      "total_harga": 12500,
+      "detail_transaksi": [
+        {
+          "sampah": {
+            "nama": "Botol PET",
+            "harga_satuan": 5000
+          },
+          "berat": 2.5
+        }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+### 4. Ajuan Penarikan Saldo
+**Method:** `POST`  
+**Endpoint:** `/ajuan-penarikan`  
+**Headers:**
+- `Authorization: Bearer {token}`
+- `Content-Type: application/json`
+
+**Request Body:**
+```json
+{
+  "total_penarikan": 50000
+}
+```
+
+**Response (Success):**
+```json
+{
+  "status": true,
+  "message": "Pengajuan penarikan berhasil dibuat",
+  "data": {
+    "id": "ajuan-789",
+    "status": "pending"
+  }
+}
+```
+
+**Response (Saldo Tidak Cukup):**
+```json
+{
+  "status": false,
+  "message": "Total penarikan melebihi saldo"
+}
+```
+
+---
+
+### 5. Cek Status Penarikan
+**Method:** `GET`  
+**Endpoint:** `/cek-ajuan-penarikan`  
+**Headers:** `Authorization: Bearer {token}`
+
+**Response:**
+```json
+{
+  "status": true,
+  "data": [
+    {
+      "id": "ajuan-789",
+      "total_penarikan": 50000,
+      "status": "berhasil",
+      "waktu_pengajuan": "2023-10-05 14:30:00"
+    }
+  ]
+}
+```
+
+---
+
+## Error Handling
+**Format Error Umum:**
+```json
+{
+  "status": false,
+  "message": "Deskripsi error",
+  "error": "Detail teknis error (jika ada)"
+}
+```
+
+**Kode Status HTTP:**
+- `400` Bad Request
+- `401` Unauthorized
+- `404` Nasabah tidak ditemukan
+- `500` Internal Server Error
+
+**Catatan:**
+1. Semua endpoint memerlukan header Authorization
+2. Field `user_id` didapatkan secara otomatis dari token
+3. Data transaksi diambil dari sistem Bank Sampah Unit (BSU)
+```
+
+Dokumentasi ini mencakup semua endpoint nasabah dengan detail request-response dan error handling. Format konsisten dengan dokumentasi BSU sebelumnya untuk memudahkan penggunaan.
